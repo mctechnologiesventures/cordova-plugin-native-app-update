@@ -1,13 +1,34 @@
 var plugin = function () {
-    return window.AppUpdate;
+  return window.AppUpdate;
 };
 var AppUpdate = /** @class */ (function () {
-    function AppUpdate() {
+  function AppUpdate() {}
+  AppUpdate.needsUpdate = function (
+    success,
+    failure,
+    force_api_url,
+    force_api_response_key
+  ) {
+    var checker = plugin();
+    if (checker) {
+      const timeOutId = setTimeout(() => {
+        failure("plugin not available");
+      }, 300);
+      return checker.needsUpdate.apply(checker, [
+        (appUpdateObj) => {
+          clearTimeout(timeOutId);
+          success(appUpdateObj);
+        },
+        (error) => {
+          clearTimeout(timeOutId);
+          failure(error);
+        },
+        force_api_url,
+        force_api_response_key,
+      ]);
     }
-    AppUpdate.needsUpdate = function (success, failure) {
-        var checker = plugin();
-        return checker.needsUpdate.apply(checker, arguments);
-    };
-    return AppUpdate;
-}());
+    failure("plugin not available");
+  };
+  return AppUpdate;
+})();
 export default AppUpdate;
