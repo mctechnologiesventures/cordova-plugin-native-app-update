@@ -296,7 +296,7 @@ public class CDVAppUpdate extends CordovaPlugin {
 
         // Log the error stack for easier debugging
         Log.e(TAG, "ERROR (" + errorNo + "): " + errorMessage);
-        e.printStackTrace(pw);
+        // e.printStackTrace(pw);
         Log.e(TAG, sw.toString());
 
         // Build the error response to return to the callback
@@ -310,7 +310,7 @@ public class CDVAppUpdate extends CordovaPlugin {
             mCallbackContext.error(taskErrorResponse);
         } catch (JSONException e_inner) {
             Log.e(TAG, "ERROR (0): Error Parsing Failed!");
-            e_inner.printStackTrace(pw);
+            // e_inner.printStackTrace(pw);
             Log.e(TAG, sw.toString());
 
             mCallbackContext.error("Failed to return error object");
