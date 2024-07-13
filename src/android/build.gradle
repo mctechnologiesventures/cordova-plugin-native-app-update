@@ -7,6 +7,6 @@ android {
 
 dependencies {
     // Load the google play core library
-    implementation 'com.google.android.play:app-update:2.0.1'
+    implementation 'com.google.android.play:app-update:2.1.0'
     implementation 'com.android.volley:volley:1.2.1'
 }
