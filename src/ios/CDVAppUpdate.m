@@ -15,18 +15,51 @@ static NSString *const TAG = @"CDVAppUpdate";
 {
     NSDictionary* infoDictionary = [[NSBundle mainBundle] infoDictionary];
     NSString* appID = infoDictionary[@"CFBundleIdentifier"];
+    NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/lookup?bundleId=%@", appID]];
+    NSMutableDictionary *resultObj = [[NSMutableDictionary alloc]initWithCapacity:10];
+    [resultObj setObject:[NSNumber numberWithBool:NO] forKey:@"update_available"];
+
+    if (url == nil) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultObj];
+        [result setKeepCallbackAsBool:YES];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+    NSError *dataError = nil;
+    NSData* data = [NSData dataWithContentsOfURL:url options:0 error:&dataError];
+    // Check if data is nil, then the connection to iTunes failed and we consider no update available
+    if (data == nil || dataError) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultObj];
+        [result setKeepCallbackAsBool:YES];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+    NSError *jsonError = nil;
+    NSDictionary *lookup = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+    if (!lookup || jsonError) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultObj];
+        [result setKeepCallbackAsBool:YES];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
+    BOOL update_avail = NO;
+    BOOL update_force = NO;
+
     NSString* force_api = nil;
     NSString* force_key = nil;
     if ([command.arguments count] > 0) {
         force_api = [command.arguments objectAtIndex:0];
-        force_key = [command.arguments objectAtIndex:1];
+        if (![force_api isKindOfClass:[NSString class]]) {
+            force_api = nil;
+        }
     }
-    NSURL* url = [NSURL URLWithString:[NSString stringWithFormat:@"http://itunes.apple.com/lookup?bundleId=%@", appID]];
-    NSData* data = [NSData dataWithContentsOfURL:url];
-    NSDictionary* lookup = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    NSMutableDictionary *resultObj = [[NSMutableDictionary alloc]initWithCapacity:10];
-    BOOL update_avail = NO;
-    BOOL update_force = NO;
+    if ([command.arguments count] > 1) {
+        force_key = [command.arguments objectAtIndex:1];
+        if (![force_key isKindOfClass:[NSString class]]) {
+            force_key = nil;
+        }
+    }
 
     NSLog(@"%@ Checking for app update", TAG);
     if ([lookup[@"resultCount"] integerValue] == 1) {
